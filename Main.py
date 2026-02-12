@@ -26,20 +26,21 @@ class Entity:
         return [self.pos[0]+self.s[0]/2,self.pos[1]+self.s[1]/2]
     def size(self):
         return self.s
-    def move(self,m):
-        self.pos = [self.pos[0]+m[0],self.pos[1]+m[1]]
+    def move(self,*args):
+        args+=(0,0)
+        self.pos = [self.pos[0]+args[0],self.pos[1]+args[1]]
 
 class Player(Entity):
     def __init__(self, *args):
         super().__init__(*args)
     def mright(self):
-        super().move((3,0))
+        super().move(3,0)
     def mleft(self):
-        super().move((-3,0))
+        super().move(-3,0)
     def mup(self):
-        super().move((0,-3))
+        super().move(0,-3)
     def mdown(self):
-        super().move((0,3))
+        super().move(0,3)
 
 class Bullet1(Entity):
     def __init__(self, target, *args):
@@ -47,13 +48,16 @@ class Bullet1(Entity):
         super().__init__(*args)
         self.ID='b1'
     def move(self):
-        super().move(ratio(self.position(),self.t))
+        if distance(self.position(),self.t) > 5:
+            super().move(*ratio(self.position(),self.t))
+        else:
+            Entities.remove(self)
 
 
 def ratio(a,b):
     run = a[0] - b[0]
     rise = a[1] - b[1]
-    return [-10*run/(run+rise),-10*rise/(run+rise)]
+    return [-10*run/(abs(run)+abs(rise)),-10*rise/(abs(run)+abs(rise))]
 def distance(a,b):
     return math.sqrt((a[0]-b[0])*(a[0]-b[0])+(a[1]-b[1])*(a[1]-b[1]))
 
@@ -78,8 +82,10 @@ while True:
                 pygame.quit()
     for E in Entities:
         pygame.draw.rect(wn,(150,150,150),E.pos+E.size())
-    if distance(P.position(),E.position())<200:
-        Entities+[Bullet1(P.position(),E.position(),'',[8,8])]
+        E.move()
+        if E.ID == 'wasp':
+            if distance(P.position(),E.position())<200:
+                Entities+=[Bullet1(P.position(),E.position(),'',[8,8])]
 
     pygame.draw.rect(wn,(255,0,0),P.pos+P.size())
     pygame.display.flip()
