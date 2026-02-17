@@ -52,7 +52,7 @@ class Blob(Entity):
         self.lastshot = 0.1
         self.targets = args[0]
         self.cycle = 0
-        super().__init__(position,'wasp',[50,50])
+        super().__init__(position,'blob',[50,50])
     def move(self):
         if distance(self.position(),self.targets[self.cycle]) < 6:
             self.cycle+=1
@@ -109,6 +109,39 @@ class Bullet1(Entity):
         else:
             super().move(self.r[0]*2,self.r[1]*2)
             
+class ExplosiveBullet1(Entity):
+    def __init__(self, target, position, timer, *args):
+        super().__init__(position,'eb1',[16,16])
+        self.r=ratio(self.position(),target)
+        self.timer = timer
+        self.health = 3
+
+    def move(self):
+        if AT - self.timer > 2:
+            Entities.remove(self)
+            Entities.append(Bullet1([P.position()[0]+velocity[0]*-10+random.randint(-12,12),P.position()[1]+velocity[1]*-10+random.randint(-12,12)],E.position()))
+        elif self.position()[0] < 0:
+            Entities.remove(self)
+            Entities.append(Bullet1([P.position()[0]+velocity[0]*-10+random.randint(-12,12),P.position()[1]+velocity[1]*-10+random.randint(-12,12)],E.position()))
+        elif self.position()[1] < 0:
+            Entities.remove(self)
+            Entities.append(Bullet1([P.position()[0]+velocity[0]*-10+random.randint(-12,12),P.position()[1]+velocity[1]*-10+random.randint(-12,12)],E.position()))
+        elif self.position()[0] > width:
+            Entities.remove(self)
+            Entities.append(Bullet1([P.position()[0]+velocity[0]*-10+random.randint(-12,12),P.position()[1]+velocity[1]*-10+random.randint(-12,12)],E.position()))
+        elif self.position()[1] > hieght:
+            Entities.remove(self)
+            
+        elif distance(self.position(),P.position()) < P.size()[0]:
+            P.health-=1
+            print(P.health)
+            # if P.health<0:
+                # pygame.quit()
+            Entities.remove(self)
+                
+        else:
+            super().move(self.r[0]*2,self.r[1]*2)
+
 class pBullet1(Entity):
     def __init__(self, target, position, *args):
         super().__init__(position,'b2',[8,8])
@@ -147,7 +180,7 @@ def distance(a,b):
     return math.sqrt((a[0]-b[0])*(a[0]-b[0])+(a[1]-b[1])*(a[1]-b[1]))
 
 P = Player([100,100],'player',[30,30])
-Entities = [Wasp([625,725],[[600,700],[1200,800],[1200,40],[350,350]]),Wasp([1500,900],[[600,700],[1200,800],[1200,40],[350,350]]),Wasp([1500,1100],[[600,700],[1200,800],[1200,40],[350,350]])]
+Entities = [Blob([625,725],[[600,700],[1200,800],[1200,40],[350,350]]),Wasp([1500,900],[[600,700],[1200,800],[1200,40],[350,350]]),Wasp([1500,1100],[[600,700],[1200,800],[1200,40],[350,350]])]
 running = True
 
 while running:
@@ -195,6 +228,10 @@ while running:
             if distance(P.position(),E.position())<500 and AT - E.lastshot > .03:
                 E.lastshot = AT
                 Entities+=[Bullet1([P.position()[0]+velocity[0]*-10+random.randint(-12,12),P.position()[1]+velocity[1]*-10+random.randint(-12,12)],E.position())]
+        if E.ID == 'blob':
+            if distance(P.position(),E.position())<1200 and AT - E.lastshot > 1.0:
+                E.lastshot = AT
+                Entities+=[ExplosiveBullet1([P.position()[0]+velocity[0]*-10+random.randint(-12,12),P.position()[1]+velocity[1]*-10+random.randint(-12,12)],E.position(),AT)]
     if pygame.mouse.get_pressed()[0]:
         Entities+=[pBullet1(pygame.mouse.get_pos(),P.position())]
     pygame.draw.rect(wn,(255,0,0),P.pos+P.size())
